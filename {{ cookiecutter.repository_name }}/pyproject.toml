@@ -1,0 +1,64 @@
+[tool.poetry]
+name = {{ cookiecutter.module_name|tojson }}
+version = "0.1.0"
+description = {{ cookiecutter.description|tojson }}
+authors = [{{ cookiecutter.author_name|tojson }}]
+{% if cookiecutter.open_source_license != 'No license file' %}license = {{ cookiecutter.open_source_license|tojson }}{% endif %}
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11"
+
+[tool.poetry.group.lint.dependencies]
+mypy = "^1.7.0"
+ruff = "^0.1.5"
+ruff-lsp = "^0.0.45"
+watchdog = {extras = ["watchmedo"], version = "^3.0.0"}
+
+[tool.poetry.group.jupyter.dependencies]
+black = "^23.11.0"
+isort = "^5.12.0"
+jupyterlab = "^4.0.8"
+jupyterlab-code-formatter = "^2.2.1"
+jupyterlab-lsp = "^5.0.0"
+
+[tool.poetry.group.visualize.dependencies]
+matplotlib = "^3.8.1"
+seaborn = "^0.13.0"
+
+[tool.poetry.group.ds.dependencies]
+mlflow = "^2.8.0"
+numpy = "^1.26.2"
+polars = "^0.19.13"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+format.line-ending = "lf"
+indent-width = 4
+line-length = 88
+select = ["E4", "E7", "E9", "F", "I"]
+src = ["src"]
+
+[tool.poe.tasks]
+lint.cmd = "ruff --fix src"
+lint.help = "Run static code analysis and sort imports alphabetically"
+format.cmd = "ruff format src"
+format.help = "Run black style code formatter"
+mypy.cmd = "mypy src"
+mypy.help = "Run static type checker"
+doctest.cmd = "python -m doctest src/**/*.py"
+doctest.help = "Run doctest"
+test.sequence = ["lint", "format", "mypy", "doctest"]
+test.help = "Format and test for all python scripts"
+watch.cmd = """\
+              watchmedo shell-command \
+              --patterns='*.py' \
+              --drop \
+              --recursive \
+              --command='poetry run python -m doctest \"${watch_src_path}\"' \
+              src\
+            """
+watch.help = "Watch src directory and run doctest automatically"
